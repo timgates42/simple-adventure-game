@@ -18,8 +18,13 @@ while not finished:
         room()
         show_room = False
     command = input("# ")
-    if command == "north":
+    if command == "north" and room == dark_tunnel:
         room = the_field
         show_room = True
+    elif command == "help":
+        show_room = True  
+    elif command == "south" and room == the_field:
+        room = dark_tunnel  
+        show_room = True     
     else:
         print("Sorry I don't understand.")
