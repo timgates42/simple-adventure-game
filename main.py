@@ -10,6 +10,12 @@ def the_field():
     Exits are: south, east
     """)
 
+def bottom_of_mountain():
+    print("""you are next to a huge moutain 
+
+   there is a pathway heading up the mountain east and west
+    """)
+
 room = dark_tunnel
 show_room = True
 finished = False
@@ -26,5 +32,11 @@ while not finished:
     elif command == "south" and room == the_field:
         room = dark_tunnel  
         show_room = True     
+    elif command == "east" and room == the_field:
+        room = bottom_of_mountain 
+        show_room = True     
     else:
         print("Sorry I don't understand.")
+    
+    
+    
