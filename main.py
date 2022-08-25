@@ -53,10 +53,10 @@ while not finished:
     elif command == "east" and room == the_field:
         room = bottom_of_mountain 
         show_room = True  
-     elif command == "west" and room == bottom_of_mountain:
+    elif command == "west" and room == bottom_of_mountain:
         room = the_field
         show_room = True    
-     elif command == "east" and room == bottom_of_mountain:
+    elif command == "east" and room == bottom_of_mountain:
         room = walking_up_the_mountain
         show_room = True  
     elif command == "west" and room == walking_up_the_mountain:
