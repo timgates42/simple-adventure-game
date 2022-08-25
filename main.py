@@ -1,3 +1,6 @@
+from operator import truediv
+
+
 def dark_tunnel():
     print("""You are in a dark tunnel.
 
@@ -25,13 +28,31 @@ def walking_up_the_mountain():
 def cave():
     print("""You are up walking into a cave and rocks fall behind you 
 
-    the cave has three only one exit and that is north
+    the cave has only one exit and that is north
     """)
 
 def waterfall():
     print("""You are up at the top of a mountain and you see a huge waterfall 
 
     you can walk back (west) or you can walk to the waterfall (east)
+    """)
+
+def death():
+    print("""you are running step by step until boom the floor colapses and you are launched derectly into a gaint snakes mouth
+
+    should have not run i guess
+    """)
+
+def monster_battle():
+    print("""You are up walking into a open area you hear a sound, it is behind you
+
+    you can look behind you, or run
+    """)
+
+def cave2():
+    print("""You are up walking into the waterfall and rocks fall behind you 
+
+    the cave has only one exit and that is north
     """)
 
 room = dark_tunnel
@@ -68,6 +89,24 @@ while not finished:
     elif command == "east" and room == walking_up_the_mountain:
         room = waterfall
         show_room = True  
+    elif command == "west" and room == waterfall:
+        room = walking_up_the_mountain
+        show_room = True 
+    elif command == "east" and room == waterfall:
+        room = cave2
+        show_room = True
+    elif command == "north" and room == cave:
+        room = monster_battle
+        show_room = True
+    elif command == "north" and room == cave2:
+        room = monster_battle
+        show_room = True
+    elif command == "run" and room == monster_battle:
+        room = death
+        show_room = True
+    elif command == "look behind me" and room == monster_battle:
+        room = monster_battle
+        show_room = True
     else:
         print("Sorry I don't understand.")
     
