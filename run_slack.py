@@ -1,13 +1,49 @@
 import os
 import threading
-from slack_sdk.rtm_v2 import RTMClient
+import time
+
 from slack_sdk import WebClient
+from slack_sdk.rtm_v2 import RTMClient
 
 rtm = RTMClient(token=os.environ["SLACK_ADVENTURE_TOKEN"])
 client = WebClient(token=os.environ["SLACK_ADVENTURE_TOKEN"])
-channel = os.environ["SLACK_ADVENTURE_CHANNEL"]
-queue = []
-condition = threading.Condition()
+channels = {}
+
+
+class Game:
+    def __init__(self, channel):
+        self.channel = channel
+        self.thread = threading.Thread(target=self.run)
+        self.condition = threading.Condition()
+        self.queue = []
+
+    def start(self):
+        self.thread.start()
+
+    def receive(self, message):
+        with self.condition:
+            self.queue.append(message)
+            self.condition.notifyAll()
+
+    def send(self, message):
+        client.api_call(
+            "chat.postMessage",
+            params={"channel": self.channel, "as_user": True, "text": message},
+        )
+
+    def response_wait(self, _):
+        while True:
+            with self.condition:
+                if self.queue:
+                    return self.queue.pop(0)
+                self.condition.wait(1.0)
+
+    def run(self):
+        with open("main.py") as fobj:
+            data = fobj.read()
+        codex = compile(data, "main.py", "exec")  # noqa # nosec
+        exec(codex, {"print": self.send, "input": self.response_wait})  # noqa # nosec
+        del channels[self.channel]
 
 
 @rtm.on("message")
@@ -16,29 +52,16 @@ def handle(client: RTMClient, event: dict):
         return
     if event["text"]:
         print(f"Got {event['text']}")
-        with condition:
-            queue.append(event["text"])
-            condition.notifyAll()
+        channel = event["channel"]
+        game = channels.get(channel)
+        if game is None and event["text"] == "start":
+            game = Game(channel)
+            channels[channel] = game
+            game.start()
+        if game is None:
+            game.receive(event["text"])
 
-
-def send(msg):
-    client.api_call(
-        "chat.postMessage", params={"channel": channel, "as_user": True, "text": msg}
-    )
-
-
-def receive(msg):
-    while True:
-        with condition:
-            if queue:
-                return queue.pop(0)
-            condition.wait(1.0)
 
 rtm.connect()
 print("connected...")
-
-with open("main.py") as fobj:
-    data = fobj.read()
-
-codex = compile(data, "main.py", "exec")
-exec(codex, {"print": send, "input": receive})
+time.sleep(1 << 30)
