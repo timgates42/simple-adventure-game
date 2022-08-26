@@ -12,8 +12,10 @@ rtm = RTMClient(token=os.environ["SLACK_ADVENTURE_TOKEN"])
 client = WebClient(token=os.environ["SLACK_ADVENTURE_TOKEN"])
 channels = {}
 
+
 class QuitException(Exception):
     pass
+
 
 class Game:
     def __init__(self, channel):
@@ -22,6 +24,7 @@ class Game:
         self.condition = threading.Condition()
         self.queue = []
         self.quit = False
+        self.restart = False
 
     def start(self):
         self.thread.start()
@@ -30,6 +33,9 @@ class Game:
         with self.condition:
             if message == "quit":
                 self.quit = True
+            elif message == "restart":
+                self.quit = True
+                self.restart = True
             else:
                 self.queue.append(message)
             self.condition.notifyAll()
@@ -59,13 +65,24 @@ class Game:
             data = fobj.read()
         try:
             codex = compile(data, "main.py", "exec")  # noqa # nosec
-            exec(codex, {"print": self.send, "input": self.response_wait})  # noqa # nosec
+            exec(  # noqa # nosec
+                codex, {"print": self.send, "input": self.response_wait}
+            )
         except QuitException:
             pass
         except Exception:
             logging.exception("end game")
-        self.raw_send("Game Over, type start to begin again.")
         del channels[self.channel]
+        if self.restart:
+            launch(self.channel)
+        else:
+            self.raw_send("Game Over, type start to begin again.")
+
+
+def launch(channel):
+    game = Game(channel)
+    channels[channel] = game
+    game.start()
 
 
 @rtm.on("message")
@@ -76,9 +93,7 @@ def handle(client: RTMClient, event: dict):
         channel = event["channel"]
         game = channels.get(channel)
         if game is None and event["text"] == "start":
-            game = Game(channel)
-            channels[channel] = game
-            game.start()
+            launch(channel)
         elif game is not None:
             game.receive(event["text"])
 
