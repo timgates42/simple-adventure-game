@@ -51,17 +51,15 @@ def handle(client: RTMClient, event: dict):
     if event.get("bot_id"):
         return
     if event["text"]:
-        print(f"Got {event['text']}")
         channel = event["channel"]
         game = channels.get(channel)
         if game is None and event["text"] == "start":
             game = Game(channel)
             channels[channel] = game
             game.start()
-        if game is None:
+        elif game is not None:
             game.receive(event["text"])
 
 
 rtm.connect()
-print("connected...")
 time.sleep(1 << 30)
