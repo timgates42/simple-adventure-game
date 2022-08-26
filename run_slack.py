@@ -1,3 +1,4 @@
+import logging
 import os
 import threading
 import time
@@ -5,10 +6,14 @@ import time
 from slack_sdk import WebClient
 from slack_sdk.rtm_v2 import RTMClient
 
+logging.basicConfig()
+
 rtm = RTMClient(token=os.environ["SLACK_ADVENTURE_TOKEN"])
 client = WebClient(token=os.environ["SLACK_ADVENTURE_TOKEN"])
 channels = {}
 
+class QuitException(Exception):
+    pass
 
 class Game:
     def __init__(self, channel):
@@ -16,16 +21,25 @@ class Game:
         self.thread = threading.Thread(target=self.run)
         self.condition = threading.Condition()
         self.queue = []
+        self.quit = False
 
     def start(self):
         self.thread.start()
 
     def receive(self, message):
         with self.condition:
-            self.queue.append(message)
+            if message == "quit":
+                self.quit = True
+            else:
+                self.queue.append(message)
             self.condition.notifyAll()
 
     def send(self, message):
+        if self.quit:
+            raise QuitException()
+        self.raw_send(message)
+
+    def raw_send(self, message):
         client.api_call(
             "chat.postMessage",
             params={"channel": self.channel, "as_user": True, "text": message},
@@ -34,6 +48,8 @@ class Game:
     def response_wait(self, _):
         while True:
             with self.condition:
+                if self.quit:
+                    raise QuitException()
                 if self.queue:
                     return self.queue.pop(0)
                 self.condition.wait(1.0)
@@ -41,8 +57,14 @@ class Game:
     def run(self):
         with open("main.py") as fobj:
             data = fobj.read()
-        codex = compile(data, "main.py", "exec")  # noqa # nosec
-        exec(codex, {"print": self.send, "input": self.response_wait})  # noqa # nosec
+        try:
+            codex = compile(data, "main.py", "exec")  # noqa # nosec
+            exec(codex, {"print": self.send, "input": self.response_wait})  # noqa # nosec
+        except QuitException:
+            pass
+        except Exception:
+            logging.exception("end game")
+        self.raw_send("Game Over, type start to begin again.")
         del channels[self.channel]
 
 
