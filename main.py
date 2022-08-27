@@ -38,7 +38,7 @@ def waterfall():
     """)
 
 def death():
-    print("""you are running step by step until boom the floor colapses and you are launched derectly into a gaint snakes mouth
+    print("""you are running step by step until boom the floor colapses and you are launched derectly into a gaint spiders mouth
 
     should have not run i guess
     """)
@@ -53,6 +53,15 @@ def cave2():
     print("""You are up walking into the waterfall and rocks fall behind you 
 
     the cave has only one exit and that is north
+    """)
+
+def spider():
+    print("""You see giant cobwebs about three time your size until you find the producer there is a gigantic spider looking and you hungryly 
+    you can fight it or run
+    """)
+def fight_the_spider():
+    print("""you stike you hit it once straight in the eyball boom it screams in pain and it swipes towards you,
+    you can try to hit it again it or dodge it 
     """)
 
 room = dark_tunnel
@@ -105,8 +114,17 @@ while not finished:
         room = death
         show_room = True
     elif command == "look behind me" and room == monster_battle:
-        room = monster_battle
+        room = spider
         show_room = True
+    elif command == "run" and room == spider:
+        room = death
+        show_room = True
+    elif command == "fight" and room == spider 
+        room = fight_the_spider
+        show_room = True 
+    elif command == "hit it agian" and room == fight_the_spider
+        room = 
+
     else:
         print("Sorry I don't understand.")
     
